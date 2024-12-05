@@ -1,0 +1,98 @@
+<pre>
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebAuthn Fingerprint Authentication</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        button {
+            margin: 10px 0;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+        #message {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>WebAuthn Fingerprint Authentication Demo</h1>
+    <button id="registerButton">Register Fingerprint</button>
+    <button id="loginButton">Login with Fingerprint</button>
+    <div id="message"></div>
+
+    <script>
+        function displayMessage(msg) {
+            const messageDiv = document.getElementById("message");
+            messageDiv.textContent = msg;
+        }
+
+        // Registration (Fingerprint Setup)
+        if (navigator.credentials && navigator.credentials.create) {
+            document.getElementById("registerButton").addEventListener("click", async () => {
+                try {
+                    const publicKey = {
+                        challenge: Uint8Array.from("random-challenge", c => c.charCodeAt(0)),
+                        rp: {
+                            name: "Demo App",
+                            id: window.location.hostname, // Use your domain or "localhost"
+                        },
+                        user: {
+                            id: Uint8Array.from("demo-user-id", c => c.charCodeAt(0)), // Unique user ID
+                            name: "demo-user",
+                            displayName: "Demo User",
+                        },
+                        pubKeyCredParams: [
+                            { type: "public-key", alg: -7 }, // ES256 algorithm
+                        ],
+                        authenticatorSelection: {
+                            authenticatorAttachment: "platform", // Use the device's built-in fingerprint hardware
+                            residentKey: "required",
+                            userVerification: "required", // Force biometrics
+                        },
+                        timeout: 60000,
+                    };
+
+                    const credential = await navigator.credentials.create({ publicKey });
+                    console.log("Credential registered successfully:", credential);
+                    displayMessage("Fingerprint registered successfully.");
+                } catch (error) {
+                    console.error("Registration error:", error);
+                    displayMessage("Error during registration: " + error.message);
+                }
+            });
+        } else {
+            console.error("WebAuthn API is not available for registration in this browser.");
+        }
+
+        // Authentication (Fingerprint Login)
+        if (navigator.credentials && navigator.credentials.get) {
+            document.getElementById("loginButton").addEventListener("click", async () => {
+                try {
+                    const publicKey = {
+                        challenge: Uint8Array.from("random-challenge", c => c.charCodeAt(0)),
+                        timeout: 60000,
+                        userVerification: "required", // Force biometric authentication
+                    };
+
+                    const assertion = await navigator.credentials.get({ publicKey });
+                    console.log("Authentication successful:", assertion);
+                    displayMessage("Fingerprint authentication successful.");
+                } catch (error) {
+                    console.error("Authentication error:", error);
+                    displayMessage("Error during authentication: " + error.message);
+                }
+            });
+        } else {
+            console.error("WebAuthn API is not available for authentication in this browser.");
+        }
+    </script>
+</body>
+</html>
+</pre>
